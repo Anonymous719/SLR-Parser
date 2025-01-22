@@ -43,7 +43,6 @@ public class FirstFollowGenerator {
             mergedFollow.add(followMerged);
         }
 
-        // Assuming firstFollow has methods to set these ArrayLists
         firstFollow.setFirst(mergedFirst);
         firstFollow.setFollow(mergedFollow);
 
@@ -54,10 +53,10 @@ public class FirstFollowGenerator {
         StringBuilder sb = new StringBuilder();
         if (set != null) {
             for (String s : set) {
-                sb.append(s); // Concatenate each element
+                sb.append(s);
             }
         }
-        return sb.toString(); // Return the concatenated string
+        return sb.toString();
     }
 
     private HashMap<String, HashSet<String>> computeFirst(Grammar grammar, ArrayList<String> nonTerminals) {
@@ -77,32 +76,44 @@ public class FirstFollowGenerator {
                 String lhs = rule.getLHS();
                 String rhs = rule.getRHS();
 
-                // Process each symbol in the RHS
-                for (char symbol : rhs.toCharArray()) {
-                    if (Character.isUpperCase(symbol)) { // Non-terminal
-                        HashSet<String> firstOfNonTerminal = firstSets.get(String.valueOf(symbol));
-                        if (firstOfNonTerminal != null) {
-                            for (String f : firstOfNonTerminal) {
-                                if (!firstSets.get(lhs).contains(f)) {
-                                    firstSets.get(lhs).add(f);
-                                    changed = true;
+                if (rhs.isEmpty()) {
+                    // Handle epsilon production
+                    if (firstSets.get(lhs).add("ε")) {
+                        changed = true;
+                    }
+                } else {
+                    // Process each symbol in the RHS
+                    boolean allDeriveEpsilon = true;
+                    for (char symbol : rhs.toCharArray()) {
+                        if (Character.isUpperCase(symbol)) { // Non-terminal
+                            HashSet<String> firstOfNonTerminal = firstSets.get(String.valueOf(symbol));
+                            if (firstOfNonTerminal != null) {
+                                for (String f : firstOfNonTerminal) {
+                                    if (!f.equals("ε") && firstSets.get(lhs).add(f)) {
+                                        changed = true;
+                                    }
                                 }
                             }
-                        }
-                        // If the non-terminal can derive ε (epsilon), continue to next symbol
-                        if (!firstOfNonTerminal.contains("ε")) {
+                            // If the non-terminal cannot derive ε, stop processing
+                            if (!firstOfNonTerminal.contains("ε")) {
+                                allDeriveEpsilon = false;
+                                break;
+                            }
+                        } else { // Terminal
+                            if (firstSets.get(lhs).add(String.valueOf(symbol))) {
+                                changed = true;
+                            }
+                            allDeriveEpsilon = false;
                             break;
                         }
-                    } else { // Terminal
-                        if (!firstSets.get(lhs).contains(String.valueOf(symbol))) {
-                            firstSets.get(lhs).add(String.valueOf(symbol));
-                            changed = true;
-                        }
-                        break; // Stop processing after finding a terminal
+                    }
+                    // If all symbols in RHS can derive ε, add ε to FIRST(lhs)
+                    if (allDeriveEpsilon && firstSets.get(lhs).add("ε")) {
+                        changed = true;
                     }
                 }
             }
-        } while (changed); // Repeat until no changes occur
+        } while (changed);
 
         return firstSets;
     }
@@ -138,30 +149,26 @@ public class FirstFollowGenerator {
                             char nextSymbol = rhs.charAt(i + 1);
                             if (Character.isUpperCase(nextSymbol)) { // Next is a non-terminal
                                 for (String f : first.get(String.valueOf(nextSymbol))) {
-                                    if (!followSets.get(String.valueOf(symbol)).contains(f)) {
-                                        followSets.get(String.valueOf(symbol)).add(f);
+                                    if (!f.equals("ε") && followSets.get(String.valueOf(symbol)).add(f)) {
                                         changed = true;
                                     }
                                 }
                                 // If next can derive ε, add FOLLOW of LHS to this non-terminal's FOLLOW set
                                 if (first.get(String.valueOf(nextSymbol)).contains("ε")) {
                                     for (String f : followSets.get(lhs)) {
-                                        if (!followSets.get(String.valueOf(symbol)).contains(f)) {
-                                            followSets.get(String.valueOf(symbol)).add(f);
+                                        if (followSets.get(String.valueOf(symbol)).add(f)) {
                                             changed = true;
                                         }
                                     }
                                 }
                             } else { // Next is a terminal
-                                if (!followSets.get(String.valueOf(symbol)).contains(String.valueOf(nextSymbol))) {
-                                    followSets.get(String.valueOf(symbol)).add(String.valueOf(nextSymbol));
+                                if (followSets.get(String.valueOf(symbol)).add(String.valueOf(nextSymbol))) {
                                     changed = true;
                                 }
                             }
                         } else { // No symbol follows this non-terminal
                             for (String f : followSets.get(lhs)) {
-                                if (!followSets.get(String.valueOf(symbol)).contains(f)) {
-                                    followSets.get(String.valueOf(symbol)).add(f);
+                                if (followSets.get(String.valueOf(symbol)).add(f)) {
                                     changed = true;
                                 }
                             }
@@ -169,12 +176,12 @@ public class FirstFollowGenerator {
                     }
                 }
             }
-        } while (changed); // Repeat until no changes occur
+        } while (changed);
 
         return followSets;
     }
-
 }
+
 
 
 

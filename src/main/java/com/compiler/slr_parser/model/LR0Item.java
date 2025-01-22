@@ -62,5 +62,90 @@ public class LR0Item {
 
         return addRules;
     }
+
+    public void updateRules(ArrayList<ProductionRule> newRules, ArrayList<Integer> newPositions) {
+        // Validate input parameters
+        if (newRules == null || newPositions == null) {
+            throw new IllegalArgumentException("New rules and positions cannot be null");
+        }
+
+        if (newRules.size() != newPositions.size()) {
+            throw new IllegalArgumentException("Number of rules must match number of positions");
+        }
+
+        // Validate dot positions
+        for (int i = 0; i < newRules.size(); i++) {
+            ProductionRule rule = newRules.get(i);
+            int position = newPositions.get(i);
+
+            if (position < 0 || position > rule.getRHS().length()) {
+                throw new IllegalArgumentException(
+                        "Invalid dot position " + position +
+                                " for rule " + rule.getLHS() + " → " + rule.getRHS()
+                );
+            }
+        }
+
+        // Create deep copies to prevent external modification
+        this.productionRules = new ArrayList<>();
+        this.dotPosition = new ArrayList<>();
+
+        for (int i = 0; i < newRules.size(); i++) {
+            // Deep copy of production rule
+            ProductionRule originalRule = newRules.get(i);
+            ProductionRule copiedRule = new ProductionRule();
+            copiedRule.setLHS(originalRule.getLHS());
+            copiedRule.setRHS(originalRule.getRHS());
+
+            this.productionRules.add(copiedRule);
+            this.dotPosition.add(newPositions.get(i));
+        }
+
+        // Sort rules for consistent comparison
+        sortRules();
+    }
+
+    private void sortRules() {
+        // Create list of indices
+        ArrayList<Integer> indices = new ArrayList<>();
+        for (int i = 0; i < productionRules.size(); i++) {
+            indices.add(i);
+        }
+
+        // Sort indices based on rules
+        indices.sort((i1, i2) -> {
+            ProductionRule r1 = productionRules.get(i1);
+            ProductionRule r2 = productionRules.get(i2);
+
+            // First compare LHS
+            int lhsCompare = r1.getLHS().compareTo(r2.getLHS());
+            if (lhsCompare != 0) {
+                return lhsCompare;
+            }
+
+            // Then compare RHS
+            int rhsCompare = r1.getRHS().compareTo(r2.getRHS());
+            if (rhsCompare != 0) {
+                return rhsCompare;
+            }
+
+            // If rules are the same, compare dot positions
+            return dotPosition.get(i1).compareTo(dotPosition.get(i2));
+        });
+
+        // Create new sorted lists
+        ArrayList<ProductionRule> sortedRules = new ArrayList<>();
+        ArrayList<Integer> sortedPositions = new ArrayList<>();
+
+        for (int index : indices) {
+            sortedRules.add(productionRules.get(index));
+            sortedPositions.add(dotPosition.get(index));
+        }
+
+        // Update the class fields
+        productionRules = sortedRules;
+        dotPosition = sortedPositions;
+    }
+
 }
 

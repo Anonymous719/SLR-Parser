@@ -2,6 +2,7 @@ package com.compiler.slr_parser.controller;
 
 
 import com.compiler.slr_parser.model.FirstFollow;
+import com.compiler.slr_parser.model.ParseCheckRequest;
 import com.compiler.slr_parser.model.Grammar;
 import com.compiler.slr_parser.model.ParsingTable;
 import com.compiler.slr_parser.model.ProductionRule;
@@ -16,29 +17,28 @@ import java.util.ArrayList;
 public class ParserController {
 
     private ParserService parserService;
-
     private FirstFollowGenerator firstFollowGenerator;
 
-    public ParserController(ParserService parserService){
+    public ParserController(ParserService parserService) {
         this.parserService = parserService;
+        this.firstFollowGenerator = new FirstFollowGenerator();
     }
 
     @GetMapping("/parse-table/{startSymbol}")
     public ParsingTable parse(@PathVariable Character startSymbol, @RequestBody ArrayList<ProductionRule> productionRules) {
-        // Create a Grammar object from the production rules and start symbol
         Grammar grammar = new Grammar(productionRules, startSymbol);
-        ParsingTable table = parserService.generateParsingTable(grammar);
-        return table;
+        return parserService.generateParsingTable(grammar);
     }
 
     @GetMapping("/first-follow/{startSymbol}")
     public FirstFollow firstFollow(@PathVariable Character startSymbol, @RequestBody ArrayList<ProductionRule> productionRules) {
-
-        firstFollowGenerator = new FirstFollowGenerator();
-        // Create a Grammar object from the production rules and start symbol
         Grammar grammar = new Grammar(productionRules, startSymbol);
-        FirstFollow firstFollowTable = firstFollowGenerator.computeFirstFollow(grammar);
-        return firstFollowTable;
+        return firstFollowGenerator.computeFirstFollow(grammar);
+    }
+
+    @GetMapping("/check-parsable")
+    public boolean checkParsable(@RequestBody ParseCheckRequest request) {
+        return parserService.checkParsable(request);
     }
 
 }

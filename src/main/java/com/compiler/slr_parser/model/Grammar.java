@@ -69,6 +69,7 @@ public class Grammar {
                 }
             }
         }
+        this.terminal.add("$");
     }
 
     public ArrayList<ProductionRule> addRule(ProductionRule newRule) {

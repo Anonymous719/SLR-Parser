@@ -25,19 +25,19 @@ public class ParserController {
         this.firstFollowGenerator = new FirstFollowGenerator();
     }
 
-    @GetMapping("/parse-table/{startSymbol}")
+    @PostMapping("/parse-table/{startSymbol}")
     public ParsingTable parse(@PathVariable Character startSymbol, @RequestBody ArrayList<ProductionRule> productionRules) {
         Grammar grammar = new Grammar(productionRules, startSymbol);
         return parserService.generateParsingTable(grammar);
     }
 
-    @GetMapping("/first-follow/{startSymbol}")
+    @PostMapping("/first-follow/{startSymbol}")
     public FirstFollow firstFollow(@PathVariable Character startSymbol, @RequestBody ArrayList<ProductionRule> productionRules) {
         Grammar grammar = new Grammar(productionRules, startSymbol);
         return firstFollowGenerator.computeFirstFollow(grammar);
     }
 
-    @GetMapping("/check-parsable")
+    @PostMapping("/check-parsable")
     public boolean checkParsable(@RequestBody ParseCheckRequest request) {
         return parserService.checkParsable(request);
     }

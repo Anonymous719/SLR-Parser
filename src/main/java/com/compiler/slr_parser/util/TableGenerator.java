@@ -26,6 +26,7 @@ public class TableGenerator {
         ArrayList<LR0Item> states = new ArrayList<>();
         LR0Item initialItem = createInitialItem(grammar);
         states.add(initialItem);
+        addEmptyRowsForState(0);
 
         FirstFollowGenerator firstFollowGenerator = new FirstFollowGenerator();
         FirstFollow firstFollow = firstFollowGenerator.computeFirstFollow(grammar);
@@ -33,7 +34,7 @@ public class TableGenerator {
         int i = 0;
         while (i < states.size()) {
             if (states.size() >= MAX_STATES) {
-                throw new RuntimeException("Grammar generates too many states. Possible left recursion or ambiguity.");
+                throw new RuntimeException("Grammar generates too many states. Possible ambiguity.");
             }
             processState(states.get(i), grammar, i, firstFollow, states);
             i++;
@@ -100,9 +101,7 @@ public class TableGenerator {
     private void addReduceAction(int stateNo, char terminal, int ruleIndex) {
         int terminalIndex = parsingTable.getTerminal().indexOf(String.valueOf(terminal));
         if (terminalIndex != -1) {
-            ensureActionTableInitialized(stateNo);
             String reduceAction = "reduce " + ruleIndex;
-
             String currentAction = parsingTable.actionTable.get(stateNo)[terminalIndex];
             if (currentAction == null) {
                 parsingTable.actionTable.get(stateNo)[terminalIndex] = reduceAction;
@@ -181,23 +180,22 @@ public class TableGenerator {
                 return i;
             }
         }
+        int newStateNo = states.size();
         states.add(newState);
-        return states.size() - 1;
+        addEmptyRowsForState(newStateNo);
+        return newStateNo;
     }
 
     private void updateTable(int fromState, char symbol, int toState) {
         if (Character.isUpperCase(symbol)) {
             int nonTerminalIndex = parsingTable.getNonTerminal().indexOf(String.valueOf(symbol));
             if (nonTerminalIndex != -1) {
-                ensureGotoTableInitialized(fromState);
                 parsingTable.gotoTable.get(fromState)[nonTerminalIndex] = String.valueOf(toState);
             }
         } else {
             int terminalIndex = parsingTable.getTerminal().indexOf(String.valueOf(symbol));
             if (terminalIndex != -1) {
-                ensureActionTableInitialized(fromState);
                 String shiftAction = "shift " + toState;
-
                 String currentAction = parsingTable.actionTable.get(fromState)[terminalIndex];
                 if (currentAction == null) {
                     parsingTable.actionTable.get(fromState)[terminalIndex] = shiftAction;
@@ -221,13 +219,10 @@ public class TableGenerator {
         return -1;
     }
 
-    private void ensureActionTableInitialized(int stateNo) {
+    private void addEmptyRowsForState(int stateNo) {
         while (parsingTable.actionTable.size() <= stateNo) {
             parsingTable.actionTable.add(new String[parsingTable.getTerminal().size()]);
         }
-    }
-
-    private void ensureGotoTableInitialized(int stateNo) {
         while (parsingTable.gotoTable.size() <= stateNo) {
             parsingTable.gotoTable.add(new String[parsingTable.getNonTerminal().size()]);
         }
@@ -243,7 +238,6 @@ public class TableGenerator {
                 if (rule.getLHS().equals(startSymbol + "'") && dotPos == rule.getRHS().length()) {
                     int endMarkerIndex = parsingTable.getTerminal().indexOf("$");
                     if (endMarkerIndex != -1) {
-                        ensureActionTableInitialized(i);
                         parsingTable.actionTable.get(i)[endMarkerIndex] = "accept";
                     }
                     return;
@@ -252,6 +246,8 @@ public class TableGenerator {
         }
     }
 }
+
+
 
 
 

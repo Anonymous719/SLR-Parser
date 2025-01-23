@@ -25,21 +25,21 @@ public class ParserController {
         this.firstFollowGenerator = new FirstFollowGenerator();
     }
 
-    @CrossOrigin(origins = "http://localhost:3000")
+    @CrossOrigin
     @PostMapping("/parse-table/{startSymbol}")
     public ParsingTable parse(@PathVariable Character startSymbol, @RequestBody ArrayList<ProductionRule> productionRules) {
         Grammar grammar = new Grammar(productionRules, startSymbol);
         return parserService.generateParsingTable(grammar);
     }
 
-    @CrossOrigin(origins = "http://localhost:3000")
+    @CrossOrigin
     @PostMapping("/first-follow/{startSymbol}")
     public FirstFollow firstFollow(@PathVariable Character startSymbol, @RequestBody ArrayList<ProductionRule> productionRules) {
         Grammar grammar = new Grammar(productionRules, startSymbol);
         return firstFollowGenerator.computeFirstFollow(grammar);
     }
 
-    @CrossOrigin(origins = "http://localhost:3000")
+    @CrossOrigin
     @PostMapping("/check-parsable")
     public boolean checkParsable(@RequestBody ParseCheckRequest request) {
         return parserService.checkParsable(request);

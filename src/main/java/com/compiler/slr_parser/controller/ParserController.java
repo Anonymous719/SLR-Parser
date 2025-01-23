@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 
-@CrossOrigin
+
 @RestController
 @RequestMapping("/api")
 public class ParserController {
@@ -25,18 +25,21 @@ public class ParserController {
         this.firstFollowGenerator = new FirstFollowGenerator();
     }
 
+    @CrossOrigin(origins = "http://localhost:3000")
     @PostMapping("/parse-table/{startSymbol}")
     public ParsingTable parse(@PathVariable Character startSymbol, @RequestBody ArrayList<ProductionRule> productionRules) {
         Grammar grammar = new Grammar(productionRules, startSymbol);
         return parserService.generateParsingTable(grammar);
     }
 
+    @CrossOrigin(origins = "http://localhost:3000")
     @PostMapping("/first-follow/{startSymbol}")
     public FirstFollow firstFollow(@PathVariable Character startSymbol, @RequestBody ArrayList<ProductionRule> productionRules) {
         Grammar grammar = new Grammar(productionRules, startSymbol);
         return firstFollowGenerator.computeFirstFollow(grammar);
     }
 
+    @CrossOrigin(origins = "http://localhost:3000")
     @PostMapping("/check-parsable")
     public boolean checkParsable(@RequestBody ParseCheckRequest request) {
         return parserService.checkParsable(request);
